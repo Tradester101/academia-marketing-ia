@@ -1,0 +1,104 @@
+---
+const title = 'Administración | Academia Marketing + IA';
+---
+<!doctype html>
+<html lang="es">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>{title}</title><link rel="stylesheet" href="/academy.css" /></head>
+  <body>
+    <header class="topbar"><a class="brand" href="/">Academia <span>Marketing + IA</span></a><a class="button ghost" href="/dashboard">Volver al panel</a></header>
+    <main class="dashboard-shell">
+      <p class="eyebrow">GESTIÓN ACADÉMICA</p><h1>Administración</h1>
+      <div id="notice" class="notice" role="status">Verificando permisos…</div>
+      <section id="admin-content" hidden>
+        <div class="course-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+          <form id="course-form" class="panel" style="padding:22px;display:grid;gap:10px">
+            <h2>Crear curso</h2>
+            <label for="course-title">Nombre</label><input id="course-title" required maxlength="120" />
+            <label for="course-slug">Slug único</label><input id="course-slug" required pattern="[a-z0-9-]+" placeholder="mi-curso" />
+            <label for="course-level">Nivel</label><select id="course-level"><option value="basico">Básico</option><option value="intermedio">Intermedio</option><option value="avanzado">Avanzado</option></select>
+            <label for="course-description">Descripción</label><textarea id="course-description" rows="3" maxlength="500"></textarea>
+            <button class="button primary" type="submit">Guardar curso</button>
+          </form>
+          <form id="lesson-form" class="panel" style="padding:22px;display:grid;gap:10px">
+            <h2>Añadir lección</h2>
+            <label for="lesson-course">Curso</label><select id="lesson-course" required></select>
+            <label for="lesson-title">Título</label><input id="lesson-title" required maxlength="160" />
+            <label for="lesson-slug">Slug</label><input id="lesson-slug" required pattern="[a-z0-9-]+" placeholder="nombre-de-leccion" />
+            <label for="lesson-url">Ruta del contenido</label><input id="lesson-url" placeholder="/basico/mi-leccion/" />
+            <button class="button primary" type="submit">Guardar lección</button>
+          </form>
+        </div>
+        <section class="panel" style="padding:24px;margin-top:22px">
+          <h2>Cursos y lecciones</h2><div id="catalogue" style="display:grid;gap:16px;margin-top:18px"></div>
+        </section>
+      </section>
+    </main>
+    <script>
+      import { supabase } from '../lib/supabase';
+      const notice = document.querySelector('#notice');
+      const content = document.querySelector('#admin-content');
+      const say = (message, error = false) => { notice.textContent = message; notice.className = error ? 'notice error' : 'notice'; };
+      let client = null;
+      const loadCatalogue = async () => {
+        const { data: courses, error } = await client.from('courses').select('id,title,slug,level,published,description').order('sort_order');
+        if (error) return say(error.message, true);
+        const select = document.querySelector('#lesson-course');
+        select.replaceChildren(...courses.map(course => { const option = document.createElement('option'); option.value = course.id; option.textContent = course.title; return option; }));
+        const catalogue = document.querySelector('#catalogue');
+        catalogue.replaceChildren();
+        for (const course of courses) {
+          const section = document.createElement('section');
+          section.style.cssText = 'border:1px solid #e5e9f2;border-radius:14px;padding:16px';
+          const heading = document.createElement('h3'); heading.textContent = course.title + ' · ' + (course.published ? 'Publicado' : 'Borrador');
+          const description = document.createElement('p'); description.className = 'muted'; description.textContent = course.description || course.slug;
+          const toggle = document.createElement('button'); toggle.className = 'button ghost'; toggle.textContent = course.published ? 'Despublicar' : 'Publicar';
+          toggle.addEventListener('click', async () => { const { error } = await client.from('courses').update({ published: !course.published }).eq('id', course.id); if (error) say(error.message, true); else { say('Estado del curso actualizado.'); loadCatalogue(); } });
+          const remove = document.createElement('button'); remove.className = 'button ghost'; remove.textContent = 'Eliminar curso'; remove.style.marginLeft = '8px';
+          remove.addEventListener('click', async () => { if (!confirm('¿Eliminar este curso y sus lecciones?')) return; const { error } = await client.from('courses').delete().eq('id', course.id); if (error) say(error.message, true); else { say('Curso eliminado.'); loadCatalogue(); } });
+          section.append(heading, description, toggle, remove);
+          const { data: lessons, error: lessonError } = await client.from('lessons').select('id,title,content_url,published').eq('course_id', course.id).order('sort_order');
+          if (lessonError) say(lessonError.message, true);
+          const list = document.createElement('ul');
+          for (const lesson of lessons || []) {
+            const item = document.createElement('li');
+            const link = document.createElement('a'); link.href = lesson.content_url || '#'; link.textContent = lesson.title; link.style.marginRight = '12px';
+            const publish = document.createElement('button'); publish.className = 'text-button'; publish.textContent = lesson.published ? 'Despublicar' : 'Publicar';
+            publish.addEventListener('click', async () => { const { error } = await client.from('lessons').update({ published: !lesson.published }).eq('id', lesson.id); if (error) say(error.message, true); else loadCatalogue(); });
+            const del = document.createElement('button'); del.className = 'text-button'; del.textContent = ' · Eliminar';
+            del.addEventListener('click', async () => { if (!confirm('¿Eliminar esta lección?')) return; const { error } = await client.from('lessons').delete().eq('id', lesson.id); if (error) say(error.message, true); else loadCatalogue(); });
+            item.append(link, publish, del); list.append(item);
+          }
+          section.append(list); catalogue.append(section);
+        }
+      };
+      if (!supabase) say('Supabase no está configurado.', true);
+      else {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) window.location.replace('/login');
+        else {
+          client = supabase;
+          const { data: profile, error } = await client.from('profiles').select('role').eq('id', session.user.id).maybeSingle();
+          if (error || profile?.role !== 'admin') say('Acceso restringido. Esta cuenta no tiene rol de administrador.', true);
+          else {
+            content.hidden = false; say('Acceso autorizado.');
+            await loadCatalogue();
+            document.querySelector('#course-form').addEventListener('submit', async event => {
+              event.preventDefault();
+              const payload = { title: document.querySelector('#course-title').value.trim(), slug: document.querySelector('#course-slug').value.trim(), level: document.querySelector('#course-level').value, description: document.querySelector('#course-description').value.trim(), published: false };
+              const { error } = await client.from('courses').insert(payload);
+              if (error) say(error.message, true); else { say('Curso creado como borrador.'); event.target.reset(); loadCatalogue(); }
+            });
+            document.querySelector('#lesson-form').addEventListener('submit', async event => {
+              event.preventDefault();
+              const courseId = document.querySelector('#lesson-course').value;
+              const { count } = await client.from('lessons').select('*', { count: 'exact', head: true }).eq('course_id', courseId);
+              const payload = { course_id: courseId, title: document.querySelector('#lesson-title').value.trim(), slug: document.querySelector('#lesson-slug').value.trim(), content_url: document.querySelector('#lesson-url').value.trim() || null, sort_order: (count || 0) + 1, published: false };
+              const { error } = await client.from('lessons').insert(payload);
+              if (error) say(error.message, true); else { say('Lección creada como borrador.'); event.target.reset(); loadCatalogue(); }
+            });
+          }
+        }
+      }
+    </script>
+  </body>
+</html>

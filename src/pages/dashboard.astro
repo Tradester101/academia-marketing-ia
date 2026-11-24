@@ -1,0 +1,78 @@
+---
+const title = 'Mi aprendizaje | Academia Marketing + IA';
+---
+<!doctype html>
+<html lang="es">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="Panel personal de aprendizaje, cursos y progreso." /><title>{title}</title><link rel="stylesheet" href="/academy.css" /></head>
+  <body>
+    <header class="topbar"><a class="brand" href="/">Academia <span>Marketing + IA</span></a><button id="logout" class="button ghost">Cerrar sesión</button></header>
+    <main class="dashboard-shell">
+      <section class="welcome"><p class="eyebrow">PANEL DEL ALUMNO</p><h1>Tu aprendizaje, en un solo lugar.</h1><p class="muted" id="user-email">Cargando tu cuenta…</p><p><a class="text-button" href="/tutor">Consultar al tutor IA →</a></p></section>
+      <div id="notice" class="notice" role="status" aria-live="polite"></div>
+      <section class="stats">
+        <article class="panel stat"><span class="muted">Módulos del programa</span><strong>10</strong></article>
+        <article class="panel stat"><span class="muted">Tu progreso</span><strong id="progress">0%</strong></article>
+        <article class="panel stat"><span class="muted">Nivel actual</span><strong id="level">Básico</strong></article>
+      </section>
+      <section class="section-heading"><div><p class="eyebrow">RUTA FORMATIVA</p><h2>Continúa aprendiendo</h2></div><a class="text-button" href="/">Ver programa completo →</a></section>
+      <section class="course-grid">
+        <a class="panel course" href="/basico/modulo-01-fundamentos/"><span class="tag">BÁSICO · 01–03</span><h3>Fundamentos y estrategia digital</h3><p class="muted">Marketing, comunidad y fundamentos de IA.</p><span class="course-link">Explorar módulos →</span></a>
+        <a class="panel course" href="/intermedio/modulo-04-seo-contenidos-copywriting/"><span class="tag">INTERMEDIO · 04–07</span><h3>Marketing y automatización</h3><p class="muted">SEO, campañas, analítica y flujos automatizados.</p><span class="course-link">Explorar módulos →</span></a>
+        <a class="panel course" href="/avanzado/modulo-08-growth-marketing-cro/"><span class="tag">AVANZADO · 08–10</span><h3>Growth, producto e IA aplicada</h3><p class="muted">CRO, agentes, aplicaciones y despliegue.</p><span class="course-link">Explorar módulos →</span></a>
+      </section>
+      <section class="panel progress-panel">
+        <p class="eyebrow">SEGUIMIENTO PERSONAL</p><h2>Registrar avance por lección</h2>
+        <p class="muted">Marca cada módulo cuando lo hayas completado. El avance queda asociado a tu cuenta.</p>
+        <label for="lesson-select">Módulo</label>
+        <select id="lesson-select" style="width:100%;padding:13px;border:1px solid #dce2ed;border-radius:10px;margin:8px 0 14px;font:inherit"></select>
+        <button id="complete-lesson" class="button primary" type="button">Marcar como completado</button>
+        <div class="progress-track"><span id="progress-bar"></span></div>
+      </section>
+    </main>
+    <script>
+      import { supabase } from '../lib/supabase';
+      const notice = document.querySelector('#notice');
+      const say = (message, error = false) => { notice.textContent = message; notice.className = error ? 'notice error' : 'notice'; };
+      if (!supabase) say('Falta configurar Supabase. Añade las variables públicas y aplica la migración SQL.', true);
+      else {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => { if (!session) window.location.replace('/login'); });
+        const { data: auth } = await supabase.auth.getSession();
+        if (!auth.session) window.location.replace('/login');
+        else {
+          const userId = auth.session.user.id;
+          document.querySelector('#user-email').textContent = auth.session.user.email ?? 'Alumno';
+          const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle();
+          if (profile?.role === 'admin') document.querySelector('.welcome').insertAdjacentHTML('beforeend', '<p><a class="text-button" href="/admin">Abrir administración →</a></p>');
+          const { data: lessons, error: lessonsError } = await supabase.from('lessons').select('id,title,content_url,sort_order').eq('published', true).order('sort_order');
+          const lessonList = lessons || [];
+          const select = document.querySelector('#lesson-select');
+          if (lessonsError) say('No se pudieron cargar los módulos: ' + lessonsError.message, true);
+          else {
+            for (const lesson of lessonList) {
+              const option = document.createElement('option'); option.value = lesson.id; option.textContent = lesson.title; select.append(option);
+            }
+          }
+          const refreshProgress = async () => {
+            const { data: rows, error } = await supabase.from('lesson_progress').select('lesson_id,completed').eq('user_id', userId);
+            if (error) return say('No se pudo consultar el progreso: ' + error.message, true);
+            const completedIds = new Set((rows || []).filter(row => row.completed).map(row => row.lesson_id));
+            const percent = Math.round((completedIds.size / 10) * 100);
+            document.querySelector('#progress').textContent = percent + '%';
+            document.querySelector('#progress-bar').style.width = percent + '%';
+            for (const option of select.options) if (completedIds.has(option.value)) option.textContent = '✓ ' + (lessonList.find(item => item.id === option.value)?.title || option.textContent.replace(/^✓ /, ''));
+          };
+          await refreshProgress();
+          document.querySelector('#complete-lesson').addEventListener('click', async () => {
+            const lessonId = select.value;
+            if (!lessonId) return say('No hay módulos publicados para registrar.', true);
+            const { error } = await supabase.from('lesson_progress').upsert({ user_id: userId, lesson_id: lessonId, completed: true, completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }, { onConflict: 'user_id,lesson_id' });
+            if (error) say('No se pudo guardar el avance: ' + error.message, true);
+            else { say('Módulo marcado como completado.'); await refreshProgress(); }
+          });
+        }
+        document.querySelector('#logout').addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = '/login'; });
+        window.addEventListener('pagehide', () => subscription.unsubscribe());
+      }
+    </script>
+  </body>
+</html>
