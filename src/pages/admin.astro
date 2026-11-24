@@ -1,0 +1,29 @@
+---
+const title = 'Administración | Academia Marketing + IA';
+---
+<!doctype html>
+<html lang="es">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>{title}</title><link rel="stylesheet" href="/academy.css" /></head>
+  <body>
+    <header class="topbar"><a class="brand" href="/">Academia <span>Marketing + IA</span></a><a class="button ghost" href="/dashboard">Volver al panel</a></header>
+    <main class="dashboard-shell narrow">
+      <p class="eyebrow">GESTIÓN ACADÉMICA</p><h1>Administración</h1>
+      <div id="notice" class="notice" role="status">Verificando permisos…</div>
+      <section id="admin-content" class="panel" hidden><h2>Panel de control</h2><p class="muted">La cuenta tiene rol de administrador. La gestión de cursos y matrículas se realiza mediante las tablas protegidas de Supabase.</p><ul><li><code>profiles</code>: alumnos y roles</li><li><code>courses</code>: catálogo formativo</li><li><code>lessons</code>: lecciones y orden</li><li><code>enrollments</code>: matrículas</li><li><code>lesson_progress</code>: seguimiento individual</li></ul><a class="text-button" href="/">Abrir contenido público →</a></section>
+    </main>
+    <script>
+      import { supabase } from '../lib/supabase';
+      const notice = document.querySelector('#notice');
+      if (!supabase) notice.textContent = 'Supabase no está configurado.';
+      else {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) window.location.replace('/login');
+        else {
+          const { data: profile, error } = await supabase.from('profiles').select('role').eq('id', session.user.id).maybeSingle();
+          if (error || profile?.role !== 'admin') { notice.textContent = 'Acceso restringido. Esta cuenta no tiene rol de administrador.'; notice.classList.add('error'); }
+          else { notice.textContent = 'Acceso autorizado.'; document.querySelector('#admin-content').hidden = false; }
+        }
+      }
+    </script>
+  </body>
+</html>
