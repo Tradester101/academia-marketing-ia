@@ -121,13 +121,14 @@ Sin variables de Supabase el sitio público funciona igual; el portal muestra un
 ```
 src/
 ├── content/docs/        # Módulos, plantillas y servicios (Markdown)
-├── components/          # LessonFooter: progreso al final de cada módulo
+├── components/          # Hero y Landing (portada), AccountLink (acceso), LessonFooter (progreso)
 ├── pages/               # login, dashboard, tutor, admin
 └── lib/supabase.ts      # Cliente de Supabase en el navegador
 supabase/
 ├── migrations/          # Esquema, RLS y catálogo inicial
 └── functions/ai-tutor/  # Edge Function del tutor IA
-public/academy.css       # Estilos del portal
+public/academy.css       # Estilos del portal (tema claro y oscuro)
+public/og.png            # Imagen para compartir en redes
 ```
 
 ## Estado y siguientes pasos
@@ -138,12 +139,14 @@ public/academy.css       # Estilos del portal
 - Administración: crear cursos y lecciones, publicarlos, despublicarlos y eliminarlos.
 - Progreso por módulo desde cada página (`src/components/LessonFooter.astro`, que reemplaza el `Footer` de Starlight y localiza la lección por `content_url` o, si no coincide, por `slug`).
 - Panel con número de módulos, porcentaje y nivel calculados a partir de las lecciones publicadas.
+- Identidad visual futurista compartida por el sitio y el portal: Space Grotesk + DM Sans, gradientes índigo, violeta y cian, superficies de cristal, modo claro y oscuro, y respeto a `prefers-reduced-motion`.
 
 **Pendiente**
 
 - Editar cursos y lecciones existentes desde `/admin`.
 - Usar la tabla `enrollments` para matricular alumnos en cursos concretos.
 - Límite de uso del tutor IA por alumno.
+- Testimonios reales en la portada cuando haya alumnos que los autoricen.
 
 ---
 

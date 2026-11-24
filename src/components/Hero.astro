@@ -1,0 +1,188 @@
+---
+// Home hero: replaces Starlight's splash hero on the landing page only.
+import Default from '@astrojs/starlight/components/Hero.astro';
+const PAGE_TITLE_ID = '_top';
+
+const isHome = Astro.locals.starlightRoute.id === '';
+const modules = [
+  { n: '01', title: 'Fundamentos del marketing digital', done: true },
+  { n: '02', title: 'Community management esencial', done: true },
+  { n: '03', title: 'Introducción práctica a la IA', done: false, current: true },
+  { n: '04', title: 'SEO, contenidos y copywriting', done: false },
+];
+---
+
+{
+  isHome ? (
+    <section class="am-hero not-content" aria-labelledby={PAGE_TITLE_ID}>
+      <div class="am-hero-copy">
+        <p class="am-pill"><span class="am-dot" aria-hidden="true" />10 módulos · 3 niveles · tutor IA</p>
+        <h1 id={PAGE_TITLE_ID} data-page-title>
+          Marketing digital e <span class="am-grad">inteligencia artificial</span>, de la teoría a tu primer cliente.
+        </h1>
+        <p class="am-lead">
+          Aprende estrategia, community management, SEO, paid media y automatización con IA. Cada módulo termina en un
+          entregable real publicado en Vercel.
+        </p>
+        <div class="am-actions">
+          <a class="am-btn am-btn-primary" href="/basico/modulo-01-fundamentos/">
+            Empezar el módulo 1
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </a>
+          <a class="am-btn am-btn-ghost" href="/login">Crear mi cuenta</a>
+        </div>
+        <ul class="am-trust" aria-label="Incluye">
+          <li>Contenido abierto</li>
+          <li>Progreso guardado en tu cuenta</li>
+          <li>Plantillas listas para clientes</li>
+        </ul>
+      </div>
+
+      <div class="am-hero-visual" aria-hidden="true">
+        <div class="am-orb" />
+        <div class="am-console">
+          <div class="am-console-bar"><i /><i /><i /><span>Mi panel</span></div>
+          <div class="am-console-body">
+            <div class="am-ring">
+              <svg viewBox="0 0 120 120">
+                <defs>
+                  <linearGradient id="am-ring-grad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#6366f1" />
+                    <stop offset=".55" stop-color="#a855f7" />
+                    <stop offset="1" stop-color="#22d3ee" />
+                  </linearGradient>
+                </defs>
+                <circle cx="60" cy="60" r="50" class="am-ring-track" />
+                <circle cx="60" cy="60" r="50" class="am-ring-value" />
+              </svg>
+              <div><strong>20%</strong><span>Nivel básico</span></div>
+            </div>
+            <ol class="am-modules">
+              {modules.map(m => (
+                <li class:list={{ done: m.done, current: m.current }}>
+                  <span class="am-check">{m.done ? '✓' : m.n}</span>
+                  {m.title}
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div class="am-tutor">
+            <span class="am-tutor-badge">Tutor IA</span>
+            <p>Para un negocio local, empieza por un buyer persona y una oferta de 30 días…</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  ) : (
+    <Default {...Astro.props} />
+  )
+}
+
+<style>
+  .am-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+    align-items: center;
+    gap: clamp(2rem, 5vw, 4.5rem);
+    padding-block: clamp(2.5rem, 7vw, 5.5rem) clamp(2rem, 5vw, 3.5rem);
+  }
+  .am-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    margin: 0 0 1.4rem;
+    padding: .4rem .95rem;
+    border-radius: 999px;
+    border: 1px solid var(--sl-color-hairline-light);
+    background: var(--am-card);
+    color: var(--sl-color-gray-2);
+    font: 600 .8rem var(--am-font-display);
+    letter-spacing: .04em;
+    backdrop-filter: blur(10px);
+  }
+  .am-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--am-cyan); box-shadow: 0 0 12px var(--am-cyan); animation: am-pulse 2.4s ease-in-out infinite; }
+  .am-hero h1 {
+    margin: 0;
+    font: 700 clamp(2.3rem, 4.2vw, 3.7rem)/1.04 var(--am-font-display);
+    letter-spacing: -.045em;
+    color: var(--sl-color-white);
+    text-wrap: balance;
+  }
+  .am-grad { background: var(--am-grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .am-lead { margin: 1.4rem 0 0; max-width: 34rem; font-size: clamp(1.05rem, 1.6vw, 1.2rem); line-height: 1.65; color: var(--sl-color-gray-2); }
+  .am-actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2rem; }
+  .am-btn {
+    display: inline-flex; align-items: center; gap: .55rem;
+    min-height: 3.1rem; padding: 0 1.5rem; border-radius: 999px;
+    font-weight: 700; font-size: 1rem; text-decoration: none;
+    transition: transform .2s var(--am-ease), box-shadow .2s var(--am-ease), border-color .2s var(--am-ease);
+  }
+  .am-btn-primary { background: var(--am-grad); color: #fff; box-shadow: 0 10px 34px rgba(91, 82, 240, .45); }
+  .am-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 44px rgba(91, 82, 240, .6); }
+  .am-btn-ghost { color: var(--sl-color-white); border: 1px solid var(--sl-color-hairline-light); background: var(--am-card); backdrop-filter: blur(10px); }
+  .am-btn-ghost:hover { border-color: var(--sl-color-accent); }
+  .am-btn:focus-visible { outline: 2px solid var(--sl-color-accent-high); outline-offset: 3px; }
+  .am-trust { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; margin: 1.8rem 0 0; padding: 0; list-style: none; color: var(--sl-color-gray-3); font-size: .9rem; }
+  .am-trust li { display: inline-flex; align-items: center; gap: .45rem; }
+  .am-trust li::before { content: '✓'; color: var(--am-cyan); font-weight: 700; }
+
+  /* Visual */
+  .am-hero-visual { position: relative; }
+  .am-orb {
+    position: absolute; inset: -12% 0 auto auto; width: 70%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(168, 85, 247, .55), rgba(99, 102, 241, .25) 45%, transparent 70%);
+    filter: blur(30px); animation: am-float 9s ease-in-out infinite;
+  }
+  .am-console {
+    position: relative;
+    border-radius: 1.4rem;
+    padding: 1px;
+    background: linear-gradient(140deg, rgba(129, 140, 248, .7), rgba(168, 85, 247, .25) 40%, rgba(34, 211, 238, .55));
+    box-shadow: 0 30px 80px rgba(36, 24, 120, .35);
+    transform: perspective(1400px) rotateY(-8deg) rotateX(4deg);
+    transition: transform .6s var(--am-ease);
+  }
+  .am-hero-visual:hover .am-console { transform: perspective(1400px) rotateY(-3deg) rotateX(2deg); }
+  .am-console > * { background: color-mix(in srgb, var(--sl-color-black) 88%, #1b1d48); }
+  :global(:root[data-theme='light']) .am-console > * { background: #fff; }
+  .am-console { margin-right: 1.5rem; }
+  .am-console-bar { display: flex; align-items: center; gap: .4rem; padding: .8rem 1rem; border-radius: 1.35rem 1.35rem 0 0; border-bottom: 1px solid var(--sl-color-hairline); font: 600 .78rem var(--am-font-display); color: var(--sl-color-gray-3); }
+  .am-console-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--sl-color-gray-5); }
+  .am-console-bar span { margin-left: .5rem; }
+  .am-console-body { display: grid; grid-template-columns: auto 1fr; gap: 1.4rem; align-items: center; padding: 1.4rem; }
+  .am-ring { position: relative; width: 128px; aspect-ratio: 1; }
+  .am-ring svg { width: 100%; transform: rotate(-90deg); }
+  .am-ring circle { fill: none; stroke-width: 10; }
+  .am-ring-track { stroke: var(--sl-color-gray-5); }
+  .am-ring-value { stroke: url(#am-ring-grad); stroke-linecap: round; stroke-dasharray: 314; stroke-dashoffset: 251; filter: drop-shadow(0 0 6px rgba(168, 85, 247, .6)); animation: am-fill 1.6s var(--am-ease) both .3s; }
+  .am-ring > div { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+  .am-ring strong { font: 700 1.7rem var(--am-font-display); color: var(--sl-color-white); }
+  .am-ring span { font-size: .72rem; color: var(--sl-color-gray-3); }
+  .am-modules { margin: 0; padding: 0; list-style: none; display: grid; gap: .55rem; font-size: .86rem; color: var(--sl-color-gray-2); }
+  .am-modules li { display: flex; align-items: center; gap: .65rem; padding: .5rem .65rem; border-radius: .7rem; border: 1px solid transparent; }
+  .am-modules li.current { border-color: var(--sl-color-hairline-light); background: var(--sl-color-accent-low); color: var(--sl-color-white); }
+  .am-check { flex: none; display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: .5rem; font: 700 .7rem var(--am-font-display); background: var(--sl-color-gray-6); color: var(--sl-color-gray-3); border: 1px solid var(--sl-color-hairline-light); }
+  .am-modules li.done .am-check { background: var(--am-grad); color: #fff; border-color: transparent; }
+  .am-tutor { padding: 1rem 1.4rem 1.3rem; border-top: 1px solid var(--sl-color-hairline); border-radius: 0 0 1.35rem 1.35rem; }
+  .am-tutor-badge { display: inline-block; margin-bottom: .4rem; padding: .15rem .55rem; border-radius: 999px; font: 700 .68rem var(--am-font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--am-cyan); border: 1px solid currentColor; }
+  .am-tutor p { margin: 0; font-size: .88rem; color: var(--sl-color-gray-2); }
+
+  @keyframes am-pulse { 50% { opacity: .35; } }
+  @keyframes am-float { 50% { transform: translate(-6%, 8%) scale(1.05); } }
+  @keyframes am-fill { from { stroke-dashoffset: 314; } }
+
+  @media (max-width: 62rem) {
+    .am-hero { grid-template-columns: 1fr; }
+    .am-hero-visual { max-width: 30rem; }
+    .am-console { transform: none; margin-right: 0; }
+    .am-hero { overflow-x: clip; }
+  }
+  @media (max-width: 30rem) {
+    .am-console-body { grid-template-columns: 1fr; justify-items: center; }
+    .am-modules { width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .am-dot, .am-orb, .am-ring-value { animation: none; }
+    .am-console, .am-hero-visual:hover .am-console { transform: none; transition: none; }
+  }
+</style>
