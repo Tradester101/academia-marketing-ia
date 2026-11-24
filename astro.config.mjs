@@ -18,14 +18,8 @@ export default defineConfig({
       customCss: ['./src/styles/custom.css'],
       components: {
         Footer: './src/components/LessonFooter.astro',
+        SocialIcons: './src/components/AccountLink.astro',
       },
-      social: [
-        {
-          icon: 'github',
-          label: 'GitHub',
-          href: 'https://github.com/Tradester101/academia-marketing-ia',
-        },
-      ],
       sidebar: [
         {
           label: 'Nivel Básico',

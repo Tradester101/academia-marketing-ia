@@ -3,7 +3,7 @@ const title = 'Tutor IA | Academia Marketing + IA';
 ---
 <!doctype html>
 <html lang="es">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="Tutor académico con IA para acompañar tu aprendizaje." /><title>{title}</title><link rel="stylesheet" href="/academy.css" /></head>
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="Tutor académico con IA para acompañar tu aprendizaje." /><title>{title}</title><link rel="icon" href="/favicon.svg" type="image/svg+xml" /><link rel="stylesheet" href="/academy.css" /></head>
   <body>
     <header class="topbar"><a class="brand" href="/">Academia <span>Marketing + IA</span></a><a class="button ghost" href="/dashboard">Mi panel</a></header>
     <main class="dashboard-shell narrow">
@@ -14,11 +14,15 @@ const title = 'Tutor IA | Academia Marketing + IA';
         <label for="context">Contexto de la lección (opcional)</label>
         <textarea id="context" rows="4" maxlength="10000" placeholder="Pega aquí un fragmento del material que estás estudiando." style="width:100%;padding:14px;border:1px solid #dce2ed;border-radius:11px;font:inherit"></textarea>
         <label for="question">¿Qué quieres aprender?</label>
+        <div class="chips" role="group" aria-label="Preguntas de ejemplo">
+          <button type="button" class="chip" data-example>¿Cómo defino el buyer persona de un negocio local?</button>
+          <button type="button" class="chip" data-example>Dame 5 ganchos para un reel sobre IA</button>
+          <button type="button" class="chip" data-example>¿Qué métricas reviso primero en GA4?</button>
+        </div>
         <textarea id="question" rows="3" maxlength="4000" required placeholder="Ej.: ¿Cómo construyo un embudo de conversión para un negocio local?" style="width:100%;padding:14px;border:1px solid #dce2ed;border-radius:11px;font:inherit"></textarea>
         <button id="ask" class="button primary" type="button">Consultar al tutor</button>
         <article id="answer" class="panel" hidden style="padding:20px;margin-top:20px;white-space:pre-wrap;line-height:1.7"></article>
       </section>
-      <p class="muted">El tutor requiere desplegar la función <code>ai-tutor</code> en Supabase y configurar <code>GEMINI_API_KEY</code> como secreto de esa función.</p>
     </main>
     <script>
       import { supabase } from '../lib/supabase';
@@ -26,6 +30,9 @@ const title = 'Tutor IA | Academia Marketing + IA';
       const ask = document.querySelector('#ask');
       const answer = document.querySelector('#answer');
       let accessToken = null;
+      for (const chip of document.querySelectorAll('[data-example]')) {
+        chip.addEventListener('click', () => { const field = document.querySelector('#question'); field.value = chip.textContent; field.focus(); });
+      }
       if (!supabase) notice.textContent = 'Falta configurar Supabase en las variables de entorno.';
       else {
         const { data: { session } } = await supabase.auth.getSession();

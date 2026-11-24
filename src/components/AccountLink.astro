@@ -1,0 +1,51 @@
+---
+// Replaces Starlight's social icons with a link to the student portal.
+// It reads the stored Supabase session key only to choose the label, so the
+// public pages do not load the Supabase client.
+---
+
+<a class="account-link" href="/login" data-account-link>
+  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+  <span>Acceder</span>
+</a>
+
+<script>
+  const hasSession = (() => {
+    try {
+      return Object.keys(localStorage).some(key => /^sb-.+-auth-token$/.test(key));
+    } catch {
+      return false;
+    }
+  })();
+  if (hasSession) {
+    for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-account-link]')) {
+      link.href = '/dashboard';
+      link.querySelector('span')!.textContent = 'Mi panel';
+    }
+  }
+</script>
+
+<style>
+  .account-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--sl-color-accent);
+    color: var(--sl-color-white);
+    font-size: var(--sl-text-sm);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  .account-link:hover {
+    background: var(--sl-color-accent-low);
+  }
+  .account-link:focus-visible {
+    outline: 2px solid var(--sl-color-accent-high);
+    outline-offset: 2px;
+  }
+</style>
