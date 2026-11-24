@@ -154,3 +154,37 @@ create index if not exists progress_user_idx on public.lesson_progress(user_id);
 
 -- Promote the academy owner manually after creating the first account:
 -- update public.profiles set role = 'admin' where email = 'OWNER_EMAIL';
+
+-- Seed the existing ten-module curriculum into the LMS catalogue.
+insert into public.courses (slug, title, description, level, published, sort_order)
+values
+  ('nivel-basico', 'Nivel Básico', 'Fundamentos de marketing digital, community management y prompt engineering.', 'basico', true, 1),
+  ('nivel-intermedio', 'Nivel Intermedio', 'SEO, contenidos, paid media, analítica y automatización.', 'intermedio', true, 2),
+  ('nivel-avanzado', 'Nivel Avanzado', 'Growth marketing, aplicaciones con IA y DevOps.', 'avanzado', true, 3)
+on conflict (slug) do update set
+  title = excluded.title,
+  description = excluded.description,
+  level = excluded.level,
+  published = excluded.published,
+  sort_order = excluded.sort_order;
+
+insert into public.lessons (course_id, slug, title, content_url, sort_order, published)
+select c.id, v.slug, v.title, v.content_url, v.sort_order, true
+from (values
+  ('nivel-basico', 'modulo-01-fundamentos', 'Fundamentos del Marketing Digital', '/basico/modulo-01-fundamentos/', 1),
+  ('nivel-basico', 'modulo-02-community-management', 'Community Management', '/basico/modulo-02-community-management/', 2),
+  ('nivel-basico', 'modulo-03-introduccion-ia', 'Introducción a la IA y Prompt Engineering', '/basico/modulo-03-introduccion-ia/', 3),
+  ('nivel-intermedio', 'modulo-04-seo-contenidos-copywriting', 'SEO, contenidos y copywriting', '/intermedio/modulo-04-seo-contenidos-copywriting/', 4),
+  ('nivel-intermedio', 'modulo-05-paid-media-analitica', 'Paid Media y analítica', '/intermedio/modulo-05-paid-media-analitica/', 5),
+  ('nivel-intermedio', 'modulo-06-community-management-estrategico', 'Community Management estratégico', '/intermedio/modulo-06-community-management-estrategico/', 6),
+  ('nivel-intermedio', 'modulo-07-ia-multimedia-automatizacion', 'IA multimedia y automatización', '/intermedio/modulo-07-ia-multimedia-automatizacion/', 7),
+  ('nivel-avanzado', 'modulo-08-growth-marketing-cro', 'Growth Marketing y CRO', '/avanzado/modulo-08-growth-marketing-cro/', 8),
+  ('nivel-avanzado', 'modulo-09-apps-agentes-ia-vercel', 'Aplicaciones y agentes de IA', '/avanzado/modulo-09-apps-agentes-ia-vercel/', 9),
+  ('nivel-avanzado', 'modulo-10-devops-marketing-github-actions', 'DevOps y GitHub Actions', '/avanzado/modulo-10-devops-marketing-github-actions/', 10)
+) as v(course_slug, slug, title, content_url, sort_order)
+join public.courses c on c.slug = v.course_slug
+on conflict (course_id, slug) do update set
+  title = excluded.title,
+  content_url = excluded.content_url,
+  sort_order = excluded.sort_order,
+  published = true;
