@@ -1,0 +1,52 @@
+---
+const title = 'Tutor IA | Academia Marketing + IA';
+---
+<!doctype html>
+<html lang="es">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="Tutor académico con IA para acompañar tu aprendizaje." /><title>{title}</title><link rel="stylesheet" href="/academy.css" /></head>
+  <body>
+    <header class="topbar"><a class="brand" href="/">Academia <span>Marketing + IA</span></a><a class="button ghost" href="/dashboard">Mi panel</a></header>
+    <main class="dashboard-shell narrow">
+      <p class="eyebrow">ASISTENTE DE APRENDIZAJE</p><h1>Tutor IA</h1>
+      <p class="muted">Formula preguntas sobre marketing digital, community management, automatización e inteligencia artificial.</p>
+      <section class="panel auth-panel" style="width:100%">
+        <div id="notice" class="notice" role="status">Verificando sesión…</div>
+        <label for="context">Contexto de la lección (opcional)</label>
+        <textarea id="context" rows="4" maxlength="10000" placeholder="Pega aquí un fragmento del material que estás estudiando." style="width:100%;padding:14px;border:1px solid #dce2ed;border-radius:11px;font:inherit"></textarea>
+        <label for="question">¿Qué quieres aprender?</label>
+        <textarea id="question" rows="3" maxlength="4000" required placeholder="Ej.: ¿Cómo construyo un embudo de conversión para un negocio local?" style="width:100%;padding:14px;border:1px solid #dce2ed;border-radius:11px;font:inherit"></textarea>
+        <button id="ask" class="button primary" type="button">Consultar al tutor</button>
+        <article id="answer" class="panel" hidden style="padding:20px;margin-top:20px;white-space:pre-wrap;line-height:1.7"></article>
+      </section>
+      <p class="muted">El tutor requiere desplegar la función <code>ai-tutor</code> en Supabase y configurar <code>GEMINI_API_KEY</code> como secreto de esa función.</p>
+    </main>
+    <script>
+      import { supabase } from '../lib/supabase';
+      const notice = document.querySelector('#notice');
+      const ask = document.querySelector('#ask');
+      const answer = document.querySelector('#answer');
+      let accessToken = null;
+      if (!supabase) notice.textContent = 'Falta configurar Supabase en las variables de entorno.';
+      else {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) window.location.replace('/login');
+        else { accessToken = session.access_token; notice.textContent = 'Sesión verificada. Puedes consultar.'; }
+      }
+      ask.addEventListener('click', async () => {
+        if (!accessToken || !supabase) return;
+        const question = document.querySelector('#question').value.trim();
+        const lessonContext = document.querySelector('#context').value.trim();
+        if (!question) { notice.textContent = 'Escribe una pregunta para continuar.'; return; }
+        ask.disabled = true; ask.textContent = 'Pensando…'; notice.textContent = 'Consultando al tutor…'; answer.hidden = true;
+        try {
+          const { data, error } = await supabase.functions.invoke('ai-tutor', { body: { question, lessonContext } });
+          if (error) throw error;
+          if (data?.error) throw new Error(data.error);
+          answer.textContent = data?.answer || 'No se recibió una respuesta.';
+          answer.hidden = false; notice.textContent = 'Respuesta generada.';
+        } catch (error) { notice.textContent = error.message || 'No fue posible consultar al tutor.'; }
+        finally { ask.disabled = false; ask.textContent = 'Consultar al tutor'; }
+      });
+    </script>
+  </body>
+</html>
