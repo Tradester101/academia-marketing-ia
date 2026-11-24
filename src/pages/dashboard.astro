@@ -44,10 +44,11 @@ const title = 'Mi aprendizaje | Academia Marketing + IA';
           const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle();
           if (profile?.role === 'admin') document.querySelector('.welcome').insertAdjacentHTML('beforeend', '<p><a class="text-button" href="/admin">Abrir administración →</a></p>');
           const { data: lessons, error: lessonsError } = await supabase.from('lessons').select('id,title,content_url,sort_order').eq('published', true).order('sort_order');
+          const lessonList = lessons || [];
           const select = document.querySelector('#lesson-select');
           if (lessonsError) say('No se pudieron cargar los módulos: ' + lessonsError.message, true);
           else {
-            for (const lesson of lessons || []) {
+            for (const lesson of lessonList) {
               const option = document.createElement('option'); option.value = lesson.id; option.textContent = lesson.title; select.append(option);
             }
           }
@@ -58,7 +59,7 @@ const title = 'Mi aprendizaje | Academia Marketing + IA';
             const percent = Math.round((completedIds.size / 10) * 100);
             document.querySelector('#progress').textContent = percent + '%';
             document.querySelector('#progress-bar').style.width = percent + '%';
-            for (const option of select.options) if (completedIds.has(option.value)) option.textContent = '✓ ' + (lessons.find(item => item.id === option.value)?.title || option.textContent.replace(/^✓ /, ''));
+            for (const option of select.options) if (completedIds.has(option.value)) option.textContent = '✓ ' + (lessonList.find(item => item.id === option.value)?.title || option.textContent.replace(/^✓ /, ''));
           };
           await refreshProgress();
           document.querySelector('#complete-lesson').addEventListener('click', async () => {
