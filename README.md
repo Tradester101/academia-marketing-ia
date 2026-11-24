@@ -44,7 +44,19 @@ La migración crea `profiles`, `courses`, `lessons`, `enrollments` y `lesson_pro
 
 ## Alcance actual y siguientes pasos
 
-Esta rama incorpora la base de autenticación, el panel inicial, el esquema de datos, control de acceso y endpoint de tutor. Para activar los servicios externos es necesario aplicar la migración y configurar Supabase/Gemini. También falta completar los formularios CRUD para administrar cursos y lecciones desde la interfaz y guardar el progreso por lección desde cada módulo. No se incluyen credenciales ni se afirma que los servicios externos estén configurados.
+Incluido hoy:
+
+- Autenticación, panel del alumno, tutor IA y esquema de datos con RLS.
+- Administración (`/admin`): crear cursos y lecciones, publicarlos, despublicarlos y eliminarlos.
+- Progreso por módulo: al final de cada página de módulo hay un control para marcarlo como completado (o volver a dejarlo pendiente). Si el alumno no ha iniciado sesión, se le invita a hacerlo y vuelve al mismo módulo. El control se implementa como reemplazo del `Footer` de Starlight en `src/components/LessonFooter.astro` y localiza la lección por su `content_url` o, si no coincide, por su `slug`.
+- El panel calcula el número de módulos, el porcentaje y el nivel actual a partir de las lecciones publicadas, y enlaza al siguiente módulo pendiente.
+
+Pendiente:
+
+- Editar cursos y lecciones existentes desde `/admin` (hoy solo se pueden crear, publicar y eliminar).
+- Usar la tabla `enrollments` para matricular alumnos en cursos concretos.
+
+Para activar los servicios externos es necesario aplicar la migración y configurar Supabase/Gemini. No se incluyen credenciales ni se afirma que los servicios externos estén configurados.
 
 ## Despliegue
 

@@ -16,6 +16,9 @@ export default defineConfig({
         },
       },
       customCss: ['./src/styles/custom.css'],
+      components: {
+        Footer: './src/components/LessonFooter.astro',
+      },
       social: [
         {
           icon: 'github',

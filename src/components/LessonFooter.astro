@@ -1,0 +1,193 @@
+---
+// Starlight footer override: keeps the default footer and, on module pages,
+// adds a control so signed-in students can record their progress in place.
+import Default from '@astrojs/starlight/components/Footer.astro';
+
+const id = Astro.locals.starlightRoute.id;
+const lessonSlug = id.split('/').pop() ?? '';
+const isLesson = /^modulo-\d+/.test(lessonSlug);
+---
+
+{
+  isLesson && (
+    <section class="lesson-progress not-content" data-lesson-slug={lessonSlug} aria-labelledby="lesson-progress-title">
+      <div>
+        <p class="lesson-progress-eyebrow">TU PROGRESO</p>
+        <h2 id="lesson-progress-title">¿Terminaste este módulo?</h2>
+        <p class="lesson-progress-status" role="status" aria-live="polite">Comprobando tu sesión…</p>
+      </div>
+      <div class="lesson-progress-actions">
+        <button class="lesson-progress-button" type="button" hidden>Marcar como completado</button>
+        <a class="lesson-progress-link" href="/login" hidden>Inicia sesión para guardar tu avance</a>
+        <a class="lesson-progress-link secondary" href="/dashboard" hidden>Ver mi panel</a>
+      </div>
+    </section>
+  )
+}
+
+<Default {...Astro.props}><slot /></Default>
+
+<script>
+  import { supabase } from '../lib/supabase';
+
+  type Lesson = { id: string; slug: string; content_url: string | null };
+
+  const root = document.querySelector<HTMLElement>('.lesson-progress');
+  if (root) {
+    const status = root.querySelector<HTMLElement>('.lesson-progress-status')!;
+    const button = root.querySelector<HTMLButtonElement>('.lesson-progress-button')!;
+    const [loginLink, dashboardLink] = root.querySelectorAll<HTMLAnchorElement>('.lesson-progress-link');
+    const slug = root.dataset.lessonSlug ?? '';
+    const path = window.location.pathname.replace(/\/?$/, '/');
+    const show = (message: string, isError = false) => {
+      status.textContent = message;
+      status.classList.toggle('error', isError);
+    };
+
+    const init = async () => {
+      if (!supabase) {
+        root.hidden = true;
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        loginLink.href = '/login?next=' + encodeURIComponent(path);
+        loginLink.hidden = false;
+        show('Crea una cuenta o inicia sesión para registrar los módulos que completes.');
+        return;
+      }
+
+      const { data: lessons, error: lessonError } = await supabase
+        .from('lessons')
+        .select('id,slug,content_url')
+        .eq('published', true);
+      if (lessonError) return show('No se pudo cargar el módulo: ' + lessonError.message, true);
+      const normalise = (url: string | null) => (url ? url.replace(/\/?$/, '/') : '');
+      const lesson = (lessons as Lesson[]).find(item => normalise(item.content_url) === path)
+        ?? (lessons as Lesson[]).find(item => item.slug === slug);
+      if (!lesson) {
+        show('Este módulo todavía no está disponible en tu panel de progreso.');
+        return;
+      }
+
+      const userId = session.user.id;
+      const { data: row, error: progressError } = await supabase
+        .from('lesson_progress')
+        .select('completed')
+        .eq('user_id', userId)
+        .eq('lesson_id', lesson.id)
+        .maybeSingle();
+      if (progressError) return show('No se pudo consultar tu progreso: ' + progressError.message, true);
+
+      let completed = Boolean(row?.completed);
+      const render = () => {
+        button.textContent = completed ? 'Marcar como pendiente' : 'Marcar como completado';
+        button.classList.toggle('done', completed);
+        button.setAttribute('aria-pressed', String(completed));
+        show(completed ? '✓ Ya completaste este módulo.' : 'Cuando termines, márcalo para que cuente en tu panel.');
+      };
+      render();
+      button.hidden = false;
+      dashboardLink.hidden = false;
+
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        const next = !completed;
+        const now = new Date().toISOString();
+        const { error } = await supabase!.from('lesson_progress').upsert(
+          { user_id: userId, lesson_id: lesson.id, completed: next, completed_at: next ? now : null, updated_at: now },
+          { onConflict: 'user_id,lesson_id' },
+        );
+        button.disabled = false;
+        if (error) return show('No se pudo guardar tu avance: ' + error.message, true);
+        completed = next;
+        render();
+      });
+    };
+
+    init().catch(() => show('No se pudo conectar con el servidor. Inténtalo de nuevo más tarde.', true));
+  }
+</script>
+
+<style>
+  .lesson-progress {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 3rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.75rem;
+    background: var(--sl-color-gray-6);
+  }
+  .lesson-progress[hidden] {
+    display: none;
+  }
+  .lesson-progress h2 {
+    margin: 0.15rem 0 0.35rem;
+    font-size: var(--sl-text-h4);
+    color: var(--sl-color-white);
+  }
+  .lesson-progress-eyebrow {
+    margin: 0;
+    font-size: var(--sl-text-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--sl-color-accent-high);
+  }
+  .lesson-progress-status {
+    margin: 0;
+    font-size: var(--sl-text-sm);
+    color: var(--sl-color-gray-2);
+  }
+  .lesson-progress-status.error {
+    color: var(--sl-color-red-high);
+  }
+  .lesson-progress-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  .lesson-progress-button,
+  .lesson-progress-link {
+    padding: 0.6rem 1.1rem;
+    border-radius: 0.5rem;
+    font: inherit;
+    font-size: var(--sl-text-sm);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .lesson-progress-button {
+    border: 1px solid var(--sl-color-accent);
+    background: var(--sl-color-accent);
+    color: var(--sl-color-white);
+  }
+  :root[data-theme='light'] .lesson-progress-button {
+    color: #fff;
+  }
+  .lesson-progress-button.done,
+  :root[data-theme='light'] .lesson-progress-button.done {
+    background: transparent;
+    color: var(--sl-color-accent-high);
+  }
+  .lesson-progress-button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+  .lesson-progress-link {
+    border: 1px solid var(--sl-color-accent);
+    color: var(--sl-color-accent-high);
+  }
+  .lesson-progress-link.secondary {
+    border-color: transparent;
+    padding-inline: 0.25rem;
+  }
+  .lesson-progress-button[hidden],
+  .lesson-progress-link[hidden] {
+    display: none;
+  }
+</style>

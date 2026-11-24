@@ -10,10 +10,11 @@ const title = 'Mi aprendizaje | Academia Marketing + IA';
       <section class="welcome"><p class="eyebrow">PANEL DEL ALUMNO</p><h1>Tu aprendizaje, en un solo lugar.</h1><p class="muted" id="user-email">Cargando tu cuenta…</p><p><a class="text-button" href="/tutor">Consultar al tutor IA →</a></p></section>
       <div id="notice" class="notice" role="status" aria-live="polite"></div>
       <section class="stats">
-        <article class="panel stat"><span class="muted">Módulos del programa</span><strong>10</strong></article>
+        <article class="panel stat"><span class="muted">Módulos del programa</span><strong id="module-count">–</strong></article>
         <article class="panel stat"><span class="muted">Tu progreso</span><strong id="progress">0%</strong></article>
-        <article class="panel stat"><span class="muted">Nivel actual</span><strong id="level">Básico</strong></article>
+        <article class="panel stat"><span class="muted">Nivel actual</span><strong id="level">–</strong></article>
       </section>
+      <p id="next-lesson" hidden><a class="button primary" href="/"></a></p>
       <section class="section-heading"><div><p class="eyebrow">RUTA FORMATIVA</p><h2>Continúa aprendiendo</h2></div><a class="text-button" href="/">Ver programa completo →</a></section>
       <section class="course-grid">
         <a class="panel course" href="/basico/modulo-01-fundamentos/"><span class="tag">BÁSICO · 01–03</span><h3>Fundamentos y estrategia digital</h3><p class="muted">Marketing, comunidad y fundamentos de IA.</p><span class="course-link">Explorar módulos →</span></a>
@@ -22,7 +23,7 @@ const title = 'Mi aprendizaje | Academia Marketing + IA';
       </section>
       <section class="panel progress-panel">
         <p class="eyebrow">SEGUIMIENTO PERSONAL</p><h2>Registrar avance por lección</h2>
-        <p class="muted">Marca cada módulo cuando lo hayas completado. El avance queda asociado a tu cuenta.</p>
+        <p class="muted">También puedes marcar cada módulo desde el final de su página. El avance queda asociado a tu cuenta.</p>
         <label for="lesson-select">Módulo</label>
         <select id="lesson-select" style="width:100%;padding:13px;border:1px solid #dce2ed;border-radius:10px;margin:8px 0 14px;font:inherit"></select>
         <button id="complete-lesson" class="button primary" type="button">Marcar como completado</button>
@@ -43,9 +44,11 @@ const title = 'Mi aprendizaje | Academia Marketing + IA';
           document.querySelector('#user-email').textContent = auth.session.user.email ?? 'Alumno';
           const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle();
           if (profile?.role === 'admin') document.querySelector('.welcome').insertAdjacentHTML('beforeend', '<p><a class="text-button" href="/admin">Abrir administración →</a></p>');
-          const { data: lessons, error: lessonsError } = await supabase.from('lessons').select('id,title,content_url,sort_order').eq('published', true).order('sort_order');
+          const { data: lessons, error: lessonsError } = await supabase.from('lessons').select('id,title,content_url,sort_order,courses(level)').eq('published', true).order('sort_order');
           const lessonList = lessons || [];
           const select = document.querySelector('#lesson-select');
+          const levelNames = { basico: 'Básico', intermedio: 'Intermedio', avanzado: 'Avanzado' };
+          document.querySelector('#module-count').textContent = String(lessonList.length);
           if (lessonsError) say('No se pudieron cargar los módulos: ' + lessonsError.message, true);
           else {
             for (const lesson of lessonList) {
@@ -56,11 +59,24 @@ const title = 'Mi aprendizaje | Academia Marketing + IA';
             const { data: rows, error } = await supabase.from('lesson_progress').select('lesson_id,completed').eq('user_id', userId);
             if (error) return say('No se pudo consultar el progreso: ' + error.message, true);
             const completedIds = new Set((rows || []).filter(row => row.completed).map(row => row.lesson_id));
-            const percent = Math.round((completedIds.size / 10) * 100);
+            const done = lessonList.filter(item => completedIds.has(item.id)).length;
+            const percent = lessonList.length ? Math.round((done / lessonList.length) * 100) : 0;
+            const nextLesson = lessonList.find(item => !completedIds.has(item.id));
+            document.querySelector('#level').textContent = !lessonList.length ? '–'
+              : nextLesson ? (levelNames[nextLesson.courses?.level] || 'Básico') : 'Completado';
+            const nextBox = document.querySelector('#next-lesson');
+            nextBox.hidden = !nextLesson?.content_url;
+            if (nextLesson?.content_url) {
+              const link = nextBox.querySelector('a');
+              link.href = nextLesson.content_url;
+              link.textContent = (done ? 'Continuar con: ' : 'Empezar con: ') + nextLesson.title + ' →';
+              if (select.value !== nextLesson.id && !select.dataset.touched) select.value = nextLesson.id;
+            }
             document.querySelector('#progress').textContent = percent + '%';
             document.querySelector('#progress-bar').style.width = percent + '%';
             for (const option of select.options) if (completedIds.has(option.value)) option.textContent = '✓ ' + (lessonList.find(item => item.id === option.value)?.title || option.textContent.replace(/^✓ /, ''));
           };
+          select.addEventListener('change', () => { select.dataset.touched = '1'; });
           await refreshProgress();
           document.querySelector('#complete-lesson').addEventListener('click', async () => {
             const lessonId = select.value;

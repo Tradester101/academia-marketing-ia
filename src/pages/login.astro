@@ -37,6 +37,9 @@ const title = 'Acceso de alumnos | Academia Marketing + IA';
       const title = document.querySelector('#form-title');
       const submit = document.querySelector('#submit');
       let registering = false;
+      // Return to the page that sent the student here, only for same-site paths.
+      const nextParam = new URLSearchParams(window.location.search).get('next') || '';
+      const next = /^\/(?![\/\\])/.test(nextParam) ? nextParam : '/dashboard';
       const show = (message, error = false) => {
         notice.textContent = message;
         notice.className = error ? 'notice error' : 'notice';
@@ -63,7 +66,7 @@ const title = 'Acceso de alumnos | Academia Marketing + IA';
         submit.disabled = false;
         if (result.error) return show(result.error.message, true);
         if (registering && !result.data.session) return show('Cuenta creada. Revisa tu correo para confirmar la dirección antes de iniciar sesión.');
-        window.location.href = '/dashboard';
+        window.location.href = next;
       });
     </script>
   </body>
