@@ -6,6 +6,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Academia Marketing + IA',
+      logo: { src: './public/favicon.svg', alt: '' },
       description:
         'Programa completo de Marketing Digital, Community Manager e Inteligencia Artificial con GitHub y Vercel.',
       defaultLocale: 'root',

@@ -3,11 +3,11 @@ const title = 'Mi aprendizaje | Academia Marketing + IA';
 ---
 <!doctype html>
 <html lang="es">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="Panel personal de aprendizaje, cursos y progreso." /><title>{title}</title><link rel="icon" href="/favicon.svg" type="image/svg+xml" /><link rel="stylesheet" href="/academy.css" /></head>
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="Panel personal de aprendizaje, cursos y progreso." /><title>{title}</title><link rel="icon" href="/favicon.svg" type="image/svg+xml" /><script is:inline>try{const t=localStorage.getItem("starlight-theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch{}</script><link rel="stylesheet" href="/academy.css" /></head>
   <body>
-    <header class="topbar"><a class="brand" href="/">Academia <span>Marketing + IA</span></a><button id="logout" class="button ghost">Cerrar sesión</button></header>
+    <header class="topbar"><a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28" />Academia <span>Marketing + IA</span></a><button id="logout" class="button ghost">Cerrar sesión</button></header>
     <main class="dashboard-shell">
-      <section class="welcome"><p class="eyebrow">PANEL DEL ALUMNO</p><h1>Tu aprendizaje, en un solo lugar.</h1><p class="muted" id="user-email">Cargando tu cuenta…</p><p><a class="text-button" href="/tutor">Consultar al tutor IA →</a></p></section>
+      <section class="welcome"><p class="eyebrow">PANEL DEL ALUMNO</p><h1>Tu aprendizaje, <span class="grad">en un solo lugar.</span></h1><p class="muted" id="user-email">Cargando tu cuenta…</p><p><a class="text-button" href="/tutor">Consultar al tutor IA →</a></p></section>
       <div id="notice" class="notice" role="status" aria-live="polite"></div>
       <section class="stats">
         <article class="panel stat"><span class="muted">Módulos del programa</span><strong id="module-count">–</strong></article>
@@ -25,7 +25,7 @@ const title = 'Mi aprendizaje | Academia Marketing + IA';
         <p class="eyebrow">SEGUIMIENTO PERSONAL</p><h2>Registrar avance por lección</h2>
         <p class="muted">También puedes marcar cada módulo desde el final de su página. El avance queda asociado a tu cuenta.</p>
         <label for="lesson-select">Módulo</label>
-        <select id="lesson-select" style="width:100%;padding:13px;border:1px solid #dce2ed;border-radius:10px;margin:8px 0 14px;font:inherit"></select>
+        <select id="lesson-select" class="field" style="margin:8px 0 14px"></select>
         <button id="complete-lesson" class="button primary" type="button">Marcar como completado</button>
         <div class="progress-track"><span id="progress-bar"></span></div>
       </section>
