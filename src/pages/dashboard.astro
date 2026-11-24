@@ -1,0 +1,65 @@
+---
+const title = 'Mi aprendizaje | Academia Marketing + IA';
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Panel personal de aprendizaje, cursos y progreso." />
+    <title>{title}</title>
+    <link rel="stylesheet" href="/academy.css" />
+  </head>
+  <body>
+    <header class="topbar"><a class="brand" href="/">Academia <span>Marketing + IA</span></a><button id="logout" class="button ghost">Cerrar sesión</button></header>
+    <main class="dashboard-shell">
+      <section class="welcome">
+        <p class="eyebrow">PANEL DEL ALUMNO</p>
+        <h1>Tu aprendizaje, en un solo lugar.</h1>
+        <p class="muted" id="user-email">Cargando tu cuenta…</p>
+      </section>
+      <div id="notice" class="notice" role="status" aria-live="polite"></div>
+      <section class="stats">
+        <article class="panel stat"><span class="muted">Cursos disponibles</span><strong>10 módulos</strong></article>
+        <article class="panel stat"><span class="muted">Tu progreso</span><strong id="progress">0%</strong></article>
+        <article class="panel stat"><span class="muted">Nivel actual</span><strong id="level">Básico</strong></article>
+      </section>
+      <section class="section-heading"><div><p class="eyebrow">RUTA FORMATIVA</p><h2>Continúa aprendiendo</h2></div><a class="text-button" href="/">Ver programa completo →</a></section>
+      <section class="course-grid">
+        <a class="panel course" href="/basico/modulo-01-fundamentos/"><span class="tag">BÁSICO · 01–03</span><h3>Fundamentos y estrategia digital</h3><p class="muted">Marketing, comunidad y fundamentos de IA.</p><span class="course-link">Explorar módulos →</span></a>
+        <a class="panel course" href="/intermedio/modulo-04-seo-contenidos-copywriting/"><span class="tag">INTERMEDIO · 04–07</span><h3>Marketing y automatización</h3><p class="muted">SEO, campañas, analítica y flujos automatizados.</p><span class="course-link">Explorar módulos →</span></a>
+        <a class="panel course" href="/avanzado/modulo-08-growth-marketing-cro/"><span class="tag">AVANZADO · 08–10</span><h3>Growth, producto e IA aplicada</h3><p class="muted">CRO, agentes, aplicaciones y despliegue.</p><span class="course-link">Explorar módulos →</span></a>
+      </section>
+      <section class="panel progress-panel"><div><p class="eyebrow">SEGUIMIENTO</p><h2>Tu avance se guarda en tu cuenta</h2><p class="muted">El progreso detallado se habilita al aplicar la migración SQL de Supabase.</p></div><div class="progress-track"><span id="progress-bar"></span></div></section>
+    </main>
+    <script>
+      import { supabase } from '../lib/supabase';
+      const notice = document.querySelector('#notice');
+      const say = (message, error = false) => { notice.textContent = message; notice.className = error ? 'notice error' : 'notice'; };
+      if (!supabase) {
+        say('El portal está publicado, pero falta conectar Supabase. Configura las variables públicas y aplica supabase/migrations/0001_lms.sql.', true);
+      } else {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          if (!session) window.location.replace('/login');
+          else document.querySelector('#user-email').textContent = session.user.email ?? 'Alumno';
+        });
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) window.location.replace('/login');
+        else {
+          document.querySelector('#user-email').textContent = data.session.user.email ?? 'Alumno';
+          const { data: rows, error } = await supabase.from('lesson_progress').select('completed').eq('user_id', data.session.user.id);
+          if (!error && rows) {
+            const completed = rows.filter((row) => row.completed).length;
+            const percentage = Math.round((completed / 10) * 100);
+            document.querySelector('#progress').textContent = percentage + '%';
+            document.querySelector('#progress-bar').style.width = percentage + '%';
+          }
+          const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.session.user.id).maybeSingle();
+          if (profile?.role === 'admin') document.querySelector('.welcome').insertAdjacentHTML('beforeend', '<p><a class="text-button" href="/admin">Abrir administración →</a></p>');
+        }
+        document.querySelector('#logout').addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = '/login'; });
+        window.addEventListener('pagehide', () => subscription.unsubscribe());
+      }
+    </script>
+  </body>
+</html>
