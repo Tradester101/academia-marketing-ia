@@ -3,9 +3,9 @@ const title = 'Administración | Academia Marketing + IA';
 ---
 <!doctype html>
 <html lang="es">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>{title}</title><link rel="stylesheet" href="/academy.css" /></head>
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>{title}</title><link rel="icon" href="/favicon.svg" type="image/svg+xml" /><meta property="og:image" content="https://academia-marketing-ia.vercel.app/og.png" /><meta name="theme-color" content="#070914" /><script is:inline>try{const t=localStorage.getItem("starlight-theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch{}</script><link rel="stylesheet" href="/academy.css" /></head>
   <body>
-    <header class="topbar"><a class="brand" href="/">Academia <span>Marketing + IA</span></a><a class="button ghost" href="/dashboard">Volver al panel</a></header>
+    <header class="topbar"><a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28" />Academia <span>Marketing + IA</span></a><a class="button ghost" href="/dashboard">Volver al panel</a></header>
     <main class="dashboard-shell">
       <p class="eyebrow">GESTIÓN ACADÉMICA</p><h1>Administración</h1>
       <div id="notice" class="notice" role="status">Verificando permisos…</div>
@@ -48,7 +48,7 @@ const title = 'Administración | Academia Marketing + IA';
         catalogue.replaceChildren();
         for (const course of courses) {
           const section = document.createElement('section');
-          section.style.cssText = 'border:1px solid #e5e9f2;border-radius:14px;padding:16px';
+          section.style.className = 'admin-course';
           const heading = document.createElement('h3'); heading.textContent = course.title + ' · ' + (course.published ? 'Publicado' : 'Borrador');
           const description = document.createElement('p'); description.className = 'muted'; description.textContent = course.description || course.slug;
           const toggle = document.createElement('button'); toggle.className = 'button ghost'; toggle.textContent = course.published ? 'Despublicar' : 'Publicar';

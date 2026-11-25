@@ -8,11 +8,11 @@ const title = 'Acceso de alumnos | Academia Marketing + IA';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Accede a tu espacio de aprendizaje de Academia Marketing + IA." />
     <title>{title}</title>
-    <link rel="stylesheet" href="/academy.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" /><meta property="og:image" content="https://academia-marketing-ia.vercel.app/og.png" /><meta name="theme-color" content="#070914" /><script is:inline>try{const t=localStorage.getItem("starlight-theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch{}</script><link rel="stylesheet" href="/academy.css" />
   </head>
   <body>
     <main class="auth-shell">
-      <a class="brand" href="/">Academia <span>Marketing + IA</span></a>
+      <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28" />Academia <span>Marketing + IA</span></a>
       <section class="panel auth-panel">
         <p class="eyebrow">TU ESPACIO DE APRENDIZAJE</p>
         <h1 id="form-title">Bienvenido de nuevo</h1>
@@ -37,6 +37,9 @@ const title = 'Acceso de alumnos | Academia Marketing + IA';
       const title = document.querySelector('#form-title');
       const submit = document.querySelector('#submit');
       let registering = false;
+      // Return to the page that sent the student here, only for same-site paths.
+      const nextParam = new URLSearchParams(window.location.search).get('next') || '';
+      const next = /^\/(?![\/\\])/.test(nextParam) ? nextParam : '/dashboard';
       const show = (message, error = false) => {
         notice.textContent = message;
         notice.className = error ? 'notice error' : 'notice';
@@ -63,7 +66,7 @@ const title = 'Acceso de alumnos | Academia Marketing + IA';
         submit.disabled = false;
         if (result.error) return show(result.error.message, true);
         if (registering && !result.data.session) return show('Cuenta creada. Revisa tu correo para confirmar la dirección antes de iniciar sesión.');
-        window.location.href = '/dashboard';
+        window.location.href = next;
       });
     </script>
   </body>

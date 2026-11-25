@@ -1,35 +1,11 @@
 ---
 title: Academia de Marketing Digital, Community Manager e IA
-description: Programa completo desde nivel básico hasta avanzado, apoyado en GitHub y Vercel, para aprender, ofrecer servicios y enseñar a otros.
+description: Aprende marketing digital, community management e inteligencia artificial con 10 módulos prácticos, tutor IA y entregables reales publicados en Vercel.
 template: splash
 hero:
-  tagline: Domina Marketing Digital, Community Management e Inteligencia Artificial con infraestructura real en GitHub y Vercel.
-  actions:
-    - text: Comenzar Nivel Básico
-      link: /basico/modulo-01-fundamentos/
-      icon: right-arrow
-      variant: primary
-    - text: Servicios y Mentoría
-      link: /servicios/
-      icon: external
-      variant: minimal
+  title: Academia Marketing + IA
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import Landing from '../../components/Landing.astro';
 
-## Ruta completa del programa
-
-<CardGrid stagger>
-  <Card title="1. Nivel Básico (Módulos 1–3)" icon="open-book">
-    Fundamentos de Marketing Digital, Community Management profesional y Prompt Engineering aplicado con ejercicios prácticos.
-  </Card>
-  <Card title="2. Nivel Intermedio (Módulos 4–7)" icon="rocket">
-    SEO técnico en Vercel, Paid Media, medición con GA4 y Google Tag Manager, tableros en Data Studio y automatización con n8n/Make.
-  </Card>
-  <Card title="3. Nivel Avanzado (Módulos 8–10)" icon="setting">
-    Growth Marketing, CRO, creación de herramientas propias de IA con Next.js + Vercel AI SDK y flujos automatizados en GitHub Actions.
-  </Card>
-  <Card title="4. Servicios y Enseñanza" icon="star">
-    Empaquetado comercial para ofrecer servicios a clientes y estructura docente para lanzar tus propias cohortes o talleres.
-  </Card>
-</CardGrid>
+<Landing />
