@@ -122,12 +122,20 @@ body {
 
 /* Content polish */
 .sl-markdown-content code:not(:where(.not-content *)) { border-radius: .35rem; }
-.sl-markdown-content table { border-radius: .75rem; overflow: hidden; }
+.sl-markdown-content table {
+  border-radius: .75rem;
+  /* Keep Starlight's horizontal scroll so wide tables never get cut off on phones */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 :focus-visible { outline-color: var(--sl-color-accent-high); }
 
 /* Comfortable touch targets on small screens */
 @media (max-width: 50rem) {
   .sidebar-content a, .right-sidebar a { padding-block: .55rem; }
+  /* Readable columns on phones: the table scrolls sideways instead of squeezing */
+  .sl-markdown-content :is(th, td) { min-width: 9.5rem; }
+  .sl-markdown-content :is(th, td):first-child { min-width: 7.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
